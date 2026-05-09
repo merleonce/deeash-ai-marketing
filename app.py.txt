@@ -1,0 +1,121 @@
+import streamlit as st
+import pandas as pd
+import joblib
+
+# -------------------------------------------------------------------
+# 1. ตั้งค่าหน้าเว็บ
+# -------------------------------------------------------------------
+st.set_page_config(page_title=DeeAsh AI Strategist, page_icon=🤖, layout=centered)
+
+# -------------------------------------------------------------------
+# 2. โหลดโมเดล AI (ใช้แค่ 2 ไฟล์)
+# -------------------------------------------------------------------
+@st.cache_resource
+def load_models()
+    model_a = joblib.load('model_users.pkl')
+    model_b = joblib.load('model_non_users.pkl')
+    return model_a, model_b
+
+try
+    model_users, model_non_users = load_models()
+    models_loaded = True
+except Exception as e
+    st.error(f⚠️ ไม่พบไฟล์โมเดล AI กรุณาตรวจสอบว่าโหลดมาไว้ในโฟลเดอร์เดียวกันแล้วnError {e})
+    models_loaded = False
+
+# -------------------------------------------------------------------
+# 3. ฐานข้อมูลกลยุทธ์ (อัปเดตล่าสุด)
+# -------------------------------------------------------------------
+strategy_users = {
+    0 {title Traditional Socialite (สายสังคมหน้าร้าน), msg เตรียมตัวให้พร้อมสำหรับทุกงานสำคัญ! ปิดผมขาวได้แนบเนียน รวดเร็วทันใจ},
+    1 {title High-Expectation Socialite (สายเป๊ะเน้นบำรุง), msg ที่สุดของการปิดผมขาวพร้อมบำรุงล้ำลึก มั่นใจและดูเด็กลงในทุกสถานการณ์สำคัญ},
+    2 {title Male Blue Ocean (ผู้ชายเน้นไวและบำรุง), msg ทางเลือกใหม่ของผู้ชาย! ปิดผมขาวไวใน 10 นาที จบง่ายในห้องน้ำ ไม่เลอะเทอะ},
+    3 {title Young Modern Perfectionist (รุ่นใหม่เป๊ะออนไลน์), msg ตอบโจทย์ชีวิตเร่งรีบ! ปิดผมขาวเนียนสนิท 100% ให้ลุคดูเด็กลงแบบเป็นธรรมชาติ},
+    4 {title Pragmatic Routine User (สายเน้นไว ใช้ประจำวัน), msg จัดการผมขาวเองได้ง่ายๆ ทุกเดือนที่บ้าน ด้วยสูตรอ่อนโยน ประหยัดเวลาเข้าร้าน}
+}
+
+strategy_non_users = {
+    0 {title Traditional Method Loyalist (สายยึดติดร้านครีมย้อม), msg ผลลัพธ์ระดับซาลอนที่คุณทำเองได้! สีติดชัด กลิ่นไม่ฉุน ตัวช่วยกู้ชีพคิวช่างเต็ม, promo Online Starter Kit สั่งเซ็ตซาลอนแอทโฮมผ่าน TikTok วันนี้ รับฟรี! อุปกรณ์คลุมไหล่},
+    1 {title Natural Acceptor (สายหงอกน้อยปล่อยธรรมชาติ), msg เลิกถอนให้รากผมอักเสบ! จัดการผมขาวเฉพาะจุด คืนความอ่อนเยาว์ไม่ทำร้ายผมเดิม, promo Shopee Choice สินค้าไซส์มินิ เริ่มเพียง 59.- กดใส่ตะกร้าไว้เผื่อวันไหนอยากดูเด็กลง!},
+    2 {title Health-Conscious Skeptic (สายกลัวสารเคมีแพ้), msg สบายใจทุกครั้งที่สระ! ปราศจากแอมโมเนีย อ่อนโยน ไม่แสบ ไม่คัน, promo LazMall Risk-Free ซื้อผ่าน Lazada หากแพ้ ยินดีคืนเงิน 100% ทันที!},
+    3 {title Performance Doubter (สายกังวลคุณภาพ กลัวสีตก), msg ทลายทุกความเชื่อเดิมๆ! แชมพูล็อกสีติดทนนาน สระกี่ครั้งสีก็ไม่ตก, promo Review & Earn ซื้อบน Shopee รีวิวว่าสีไม่หลุด รับ Coins คืน 50%},
+    4 {title Indifferent Potential (สายเฉยชา รอจุดเปลี่ยน), msg เปลี่ยนเรื่องย้อมผมที่ยุ่งยากให้เป็นเรื่องง่าย! แค่ฉีก เท สระ ไม่เลอะมือ, promo TikTok Viral Offer แลกซื้อไซส์ทดลอง 19 บาท ส่งฟรี! (เฉพาะลูกค้าใหม่)}
+}
+
+# -------------------------------------------------------------------
+# 4. ออกแบบหน้าเว็บ
+# -------------------------------------------------------------------
+st.title(🤖 DeeAsh AI Marketing Strategist)
+st.markdown(ระบบวิเคราะห์พฤติกรรมลูกค้าและแนะนำโปรโมชัน O2O แบบ Real-time)
+
+if models_loaded
+    tab1, tab2 = st.tabs([👤 ลูกค้าปัจจุบัน (Users), 🎯 เป้าหมายใหม่ (Non-Users)])
+
+    # --- TAB 1 สำหรับ Users ---
+    with tab1
+        st.subheader(พฤติกรรมลูกค้าปัจจุบัน)
+        col1, col2 = st.columns(2)
+        
+        with col1
+            age_raw = st.selectbox(อายุ, [ต่ำกว่า 30 ปี, 30–34 ปี, 35–44 ปี, 45–54 ปี, 55 ปีขึ้นไป], key=u_age)
+            gender_raw = st.radio(เพศ, [หญิง, ชาย, LGBTQ+], key=u_gender)
+            online_raw = st.radio(ช่องทางซื้อประจำ, [หน้าร้าน (7-11, โชห่วย, ห้าง), ออนไลน์ (Shopee, TikTok)], key=u_online)
+            
+        with col2
+            st.markdown(พฤติกรรมที่เน้น (เลือกได้หลายข้อ))
+            feat_herb = st.checkbox(🌱 เน้นสมุนไพร บำรุงล้ำลึก)
+            feat_quick = st.checkbox(⏱️ เน้นความรวดเร็ว 10 นาทีจบ)
+            feat_social = st.checkbox(🎉 ใช้เตรียมตัวออกงานสังคม)
+            feat_conf = st.checkbox(✨ ใช้เพื่อเพิ่มความมั่นใจ)
+
+        if st.button(🚀 ประมวลผลกลยุทธ์, key=btn_u)
+            age_map = {'ต่ำกว่า 30 ปี' 1, '30–34 ปี' 2, '35–44 ปี' 3, '45–54 ปี' 4, '55 ปีขึ้นไป' 5}
+            input_df = pd.DataFrame([[
+                age_map[age_raw], 
+                1 if gender_raw == ชาย else 0, 
+                1 if online_raw == ออนไลน์ (Shopee, TikTok) else 0, 
+                int(feat_herb), int(feat_quick), int(feat_social), int(feat_conf)
+            ]], columns=['age_score', 'is_male', 'is_online', 'feat_herb', 'feat_quick', 'feat_social', 'feat_confidence'])
+            
+            # Predict
+            pred_cluster = model_users.predict(input_df)[0]
+            result = strategy_users[pred_cluster]
+            
+            # O2O Promo Logic
+            if online_raw == ออนไลน์ (Shopee, TikTok)
+                promo_msg = Online Loyalty สั่งซื้อช่องทางเดิมวันนี้ รับส่วนลด 15% เมื่อสมัครแพ็กเกจส่งประจำทุกเดือน
+            else
+                promo_msg = O2O Trigger ปกติซื้อหน้าร้านใช่ไหม ลองสั่งผ่าน ShopeeTikTok ครั้งแรกวันนี้! รับโค้ดส่งฟรีและลดเพิ่ม 30%
+
+            st.success(fPersona {result['title']})
+            st.info(f💬 ข้อความโฆษณาn{result['msg']})
+            st.warning(f🎁 โปรโมชัน O2O แนะนำn{promo_msg})
+
+    # --- TAB 2 สำหรับ Non-Users ---
+    with tab2
+        st.subheader(พฤติกรรมกลุ่มเป้าหมายใหม่)
+        col3, col4 = st.columns(2)
+        
+        with col3
+            age_raw2 = st.selectbox(อายุ, [ต่ำกว่า 30 ปี, 30–34 ปี, 35–44 ปี, 45–54 ปี, 55 ปีขึ้นไป], key=nu_age)
+            
+        with col4
+            st.markdown(กำแพงในใจ (Barriers))
+            feat_chem = st.checkbox(🧪 กลัวสารเคมี แพ้ ผมเสีย)
+            feat_salon = st.checkbox(💇‍♀️ ยึดติดกับการเข้าร้าน  ใช้ครีมเดิมๆ)
+            feat_low = st.checkbox(🧑‍🦳 ผมขาวมีน้อย ปล่อยธรรมชาติ  ถอนเอา)
+            feat_doubt = st.checkbox(🤔 กังวลเรื่องคุณภาพ (สีตก  ไม่ทน))
+
+        if st.button(🚀 ประมวลผลกลยุทธ์, key=btn_nu)
+            age_map = {'ต่ำกว่า 30 ปี' 1, '30–34 ปี' 2, '35–44 ปี' 3, '45–54 ปี' 4, '55 ปีขึ้นไป' 5}
+            input_df2 = pd.DataFrame([[
+                age_map[age_raw2], int(feat_chem), int(feat_salon), int(feat_low), int(feat_doubt)
+            ]], columns=['age_score', 'feat_chemical_fear', 'feat_salon_loyalty', 'feat_low_white', 'feat_doubt_efficacy'])
+            
+            # Predict
+            pred_cluster2 = model_non_users.predict(input_df2)[0]
+            result2 = strategy_non_users[pred_cluster2]
+
+            st.success(fPersona {result2['title']})
+            st.info(f💬 ข้อความทลายกำแพงในใจn{result2['msg']})
+            st.warning(f🎁 โปรโมชันดึงดูดใจn{result2['promo']})
