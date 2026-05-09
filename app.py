@@ -148,12 +148,12 @@ elif page == "3. Supervised Learning":
         tab1, tab2 = st.tabs(["จำลองแคมเปญ: ลูกค้าปัจจุบัน", "จำลองแคมเปญ: เป้าหมายใหม่"])
 
         with tab1:
-            st.write("กรอกข้อมูลเพื่อจำลองการยิงแคมเปญแบบ Personalized (O2O Strategy)")
+            st.write("กรอกข้อมูลเพื่อจำลองการยิงแคมเปญแบบ Personalized")
             col1, col2 = st.columns(2)
             with col1:
                 age_raw = st.selectbox("อายุ:", ["ต่ำกว่า 30 ปี", "30–34 ปี", "35–44 ปี", "45–54 ปี", "55 ปีขึ้นไป"], key="u_age")
                 gender_raw = st.radio("เพศ:", ["หญิง", "ชาย", "LGBTQ+"], key="u_gender")
-                online_raw = st.radio("ช่องทางซื้อประจำ:", ["หน้าร้าน (7-11, โชห่วย, ห้าง)", "ออนไลน์ (Shopee, TikTok)"], key="u_online")
+                online_raw = st.radio("ช่องทางซื้อประจำ:", ["หน้าร้าน (เช่น 7-11, โชห่วย, ห้าง)", "ออนไลน์ (เช่น Shopee, TikTok)"], key="u_online")
             with col2:
                 st.markdown("**พฤติกรรมที่เน้น (เลือกได้หลายข้อ)**")
                 feat_herb = st.checkbox("เน้นสมุนไพร บำรุงล้ำลึก")
@@ -182,7 +182,7 @@ elif page == "3. Supervised Learning":
                 st.toast('บันทึกแคมเปญลงฐานข้อมูล (SQL) สำเร็จ!')
 
         with tab2:
-            st.write("กรอกข้อมูลเพื่อจำลองการยิงแคมเปญทลายกำแพงในใจ (Barrier Breaking)")
+            st.write("กรอกข้อมูลเพื่อจำลองการยิงแคมเปญทลายกำแพงในใจ")
             col3, col4 = st.columns(2)
             with col3:
                 age_raw2 = st.selectbox("อายุ:", ["ต่ำกว่า 30 ปี", "30–34 ปี", "35–44 ปี", "45–54 ปี", "55 ปีขึ้นไป"], key="nu_age")
@@ -243,7 +243,7 @@ elif page == "4. Business Insight":
                 st.rerun()
                 
         else:
-            st.info("ยังไม่มีประวัติการยิงแคมเปญ ลองกลับไปหน้า 'Supervised Learning' เพื่อจำลองการส่งแคมเปญดูก่อนครับ")
+            st.info("ยังไม่มีประวัติการยิงแคมเปญ ลองกลับไปหน้า 'Supervised Learning' เพื่อจำลองการส่งแคมเปญดูก่อนนะ")
             
     except Exception as e:
         st.error(f"เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล: {e}")
