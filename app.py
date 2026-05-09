@@ -96,9 +96,9 @@ st.sidebar.info("พัฒนาโดย: AI & Data Analytics Unit (AIE322-325)
 # ----------------------------------------------------------------------
 if page == "1. Home (ภาพรวมระบบ)":
     st.markdown('<p class="main-header">AI-Driven Marketing Campaign System</p>', unsafe_allow_html=True)
-    st.markdown('<div class="info-box">ระบบวิเคราะห์การตลาดและกำหนดกลุ่มเป้าหมาย (Customer Targeting) แบบครบวงจร (End-to-End Pipeline) สำหรับแบรนด์ DeeAsh เพื่อขับเคลื่อนยอดขายสู่ E-commerce</div>', unsafe_allow_html=True)
+    st.markdown('<div class="info-box">ระบบวิเคราะห์การตลาดและกำหนดกลุ่มเป้าหมายแบบครบวงจร สำหรับแบรนด์ DeeAsh เพื่อขับเคลื่อนยอดขายสู่ E-commerce</div>', unsafe_allow_html=True)
     
-    st.markdown('<p class="sub-header">ตัวชี้วัดระบบโดยรวม (System Indicators)</p>', unsafe_allow_html=True)
+    st.markdown('<p class="sub-header">ตัวชี้วัดระบบโดยรวม</p>', unsafe_allow_html=True)
     col1, col2, col3 = st.columns(3)
     col1.metric(label="ข้อมูลลูกค้าที่ใช้ฝึกสอน (Raw Data)", value="113 รายการ", delta="Cleaned 100%")
     col2.metric(label="ตัวแปรที่สกัดด้วย NLP (Features)", value="11 ตัวแปร", delta="Context-Aware")
@@ -138,7 +138,7 @@ elif page == "3. Supervised Learning":
     st.markdown('<p class="main-header">Supervised Learning (AIE322/323)</p>', unsafe_allow_html=True)
     st.markdown("ระบบใช้ **Random Forest Classifier** เพื่อทำนาย Persona ลูกค้าใหม่แบบ Real-time และเชื่อมต่อฐานข้อมูล SQL")
     
-    st.markdown('<p class="sub-header">ตัวชี้วัดประสิทธิภาพ (Supervised Indicators)</p>', unsafe_allow_html=True)
+    st.markdown('<p class="sub-header">ตัวชี้วัดประสิทธิภาพ</p>', unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     col1.metric(label="Model Accuracy (Users)", value="100.00%", delta="No Overfitting")
     col2.metric(label="Model Accuracy (Non-Users)", value="100.00%", delta="No Overfitting")
