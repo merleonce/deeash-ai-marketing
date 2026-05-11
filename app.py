@@ -89,7 +89,6 @@ page = st.sidebar.radio("เมนูนำทาง (Navigation Menu)",
                          "3. จำลองแคมเปญ (Supervised Learning)", 
                          "4. ข้อมูลเชิงลึก (Business Insight)"])
 st.sidebar.markdown("---")
-st.sidebar.info("พัฒนาโดย: AI & Data Analytics Unit")
 
 # ----------------------------------------------------------------------
 # Page 1: Home
