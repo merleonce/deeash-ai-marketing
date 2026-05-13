@@ -105,50 +105,43 @@ if page == "1. ภาพรวมระบบ (Home)":
     st.write("**วัตถุประสงค์โครงการ:** นำเทคโนโลยี Machine Learning มาใช้วิเคราะห์พฤติกรรมผู้บริโภค เพื่อสร้างแคมเปญการตลาดแบบ Personalized ที่แม่นยำและเพิ่มยอดขายในช่องทางออนไลน์")
 
 # ----------------------------------------------------------------------
-# Page 2: วิเคราะห์กลุ่มลูกค้า (Unsupervised Learning)
+# Page 2: Unsupervised Learning
 # ----------------------------------------------------------------------
 elif page == "2. วิเคราะห์กลุ่มลูกค้า (Unsupervised Learning)":
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-    from sklearn.preprocessing import MinMaxScaler
-    
     st.markdown('<p class="main-header">วิเคราะห์กลุ่มลูกค้า (Unsupervised Learning)</p>', unsafe_allow_html=True)
-    st.write("ระบบใช้เทคนิค **K-Means Clustering** ร่วมกับ **Silhouette Score** และ **PCA** ในการค้นหาพฤติกรรมแฝงและสร้าง Customer Persona")
+    st.write("การประมวลผลข้อมูลด้วย K-Means เพื่อค้นหาพฤติกรรมแฝง (Latent Behavior) และกำหนดกลยุทธ์เชิงรุก")
     
     st.markdown('<p class="sub-header">ตัวชี้วัดประสิทธิภาพของโมเดล</p>', unsafe_allow_html=True)
-    c1, c2, c3 = st.columns(3)
-    c1.metric("จำนวนกลุ่ม Users", "5 กลุ่ม", "Optimal K=5")
-    c2.metric("จำนวนกลุ่ม Non-Users", "5 กลุ่ม", "Optimal K=5")
-    c3.metric("เทคนิคที่ใช้", "PCA & Heatmap", "Data Insights")
+    c1, c2 = st.columns(2)
+    c1.metric(label="จำนวนกลุ่มลูกค้าปัจจุบัน (Users)", value="5 Clusters", delta="Silhouette Score Verified")
+    c2.metric(label="จำนวนกลุ่มเป้าหมายใหม่ (Non-Users)", value="5 Clusters", delta="Silhouette Score Verified")
     
-    st.markdown("---")
+    # --- ส่วนที่เพิ่มเข้ามา: สรุปหัวใจสำคัญ (Executive Summary) ---
+    st.markdown('<p class="sub-header">สรุปผลลัพธ์ทางธุรกิจจาก AI (Business Insights)</p>', unsafe_allow_html=True)
     
-    # --- Section: 1. Heatmap (Behavioral DNA) ---
-    st.markdown('<p class="sub-header">🧬 Behavioral DNA (การถอดรหัสพฤติกรรม)</p>', unsafe_allow_html=True)
-    st.write("ตารางความเข้มข้นของพฤติกรรมในแต่ละกลุ่ม (0.0 = ต่ำ, 1.0 = สูง)")
+    col_a, col_b = st.columns(2)
+    with col_a:
+        st.info("**สิ่งที่โมเดล Unsupervised มอบให้:**\n\n"
+                "1. **Break the Mass Marketing:** เราพบว่าลูกค้าไม่ได้มีแค่กลุ่มเดียว แต่มีถึง 5 กลุ่มย่อยที่มีความต้องการต่างกัน เช่น สายสังคมที่เน้นออกงาน กับสายปฏิบัติที่เน้นแค่ความไว\n"
+                "2. **Data-Driven Personas:** ทุก Persona ไม่ได้มาจากการคาดเดา แต่มาจาก 'ค่าพิกัดกลาง' (Centroid) ที่ยืนยันได้ด้วยสถิติ\n"
+                "3. **Targeted Communication:** ระบบช่วยให้แบรนด์เลิกใช้ข้อความหว่านแห และยิงโฆษณาที่แก้ Pain Point เฉพาะกลุ่มได้แม่นยำขึ้น")
     
-    cols_a = ['age_score', 'is_male', 'is_online', 'feat_herb', 'feat_quick', 'feat_social', 'feat_confidence']
-    centroid_a = df_users.groupby('cluster_id')[cols_a].mean()
-    
-    fig, ax = plt.subplots(1, 1, figsize=(10, 4))
-    sns.heatmap(centroid_a, annot=True, cmap='Blues', fmt='.2f', ax=ax)
-    st.pyplot(fig)
+    with col_b:
+        st.warning("**โอกาสทางธุรกิจ (Opportunity Map):**\n\n"
+                   "1. **Blue Ocean Detection:** AI ระบุกลุ่มผู้ชายที่ไม่เคยถูกทำการตลาด (Cluster 2) เป็นช่องทางใหม่ในการขยายตลาด\n"
+                   "2. **Barrier Removal:** ในกลุ่ม Non-Users AI ค้นพบกลุ่มที่กังวลเรื่องสีตก (Performance Doubter) ซึ่งเป็นโอกาสในการสื่อสารเรื่อง 'ความติดทน' เพื่อดึงคนเหล่านี้มาใช้ออนไลน์")
 
-    # --- Section: 2. PCA Visualization (Consumer Map) ---
-    st.markdown('<p class="sub-header">🗺️ Consumer Geography Map (PCA Visualization)</p>', unsafe_allow_html=True)
-    st.write("แผนที่การกระจายตัวของกลุ่มผู้บริโภคในมิติที่บีบอัดข้อมูล (2D Projection)")
-    
-    fig2, ax2 = plt.subplots(figsize=(10, 5))
-    sns.scatterplot(data=df_users, x='pca_x', y='pca_y', hue='cluster_id', palette='viridis', s=100, ax=ax2)
-    st.pyplot(fig2)
-
-    # --- Section: 3. Persona Table ---
-    st.markdown('<p class="sub-header">👤 รายละเอียด Persona แต่ละกลุ่ม</p>', unsafe_allow_html=True)
+    st.markdown('<p class="sub-header">โครงสร้างพฤติกรรมลูกค้า (Behavioral Clusters)</p>', unsafe_allow_html=True)
     tab1, tab2 = st.tabs(["ลูกค้าปัจจุบัน (Users)", "กลุ่มเป้าหมายใหม่ (Non-Users)"])
+    
     with tab1:
-        st.dataframe(pd.DataFrame([{"ID": k, "Persona": v["title"], "Need": v["msg"]} for k,v in strategy_users.items()]), use_container_width=True, hide_index=True)
+        st.write("ตารางแสดง Persona ของกลุ่มคนที่เคยใช้แชมพูปิดผมขาว DeeAsh")
+        df_u = pd.DataFrame([{"ID": k, "กลุ่มเป้าหมาย (Persona)": v["title"], "ความต้องการหลัก (Core Need)": v["msg"]} for k,v in strategy_users.items()])
+        st.dataframe(df_u, use_container_width=True, hide_index=True)
     with tab2:
-        st.dataframe(pd.DataFrame([{"ID": k, "Persona": v["title"], "Barrier": v["msg"]} for k,v in strategy_non_users.items()]), use_container_width=True, hide_index=True)
+        st.write("ตารางแสดง Persona ของกลุ่มคนที่ไม่เคยใช้แชมพูปิดผมขาว (ตลาดใหม่)")
+        df_nu = pd.DataFrame([{"ID": k, "กลุ่มเป้าหมาย (Persona)": v["title"], "วิธีทลายกำแพง (Barrier to Break)": v["msg"]} for k,v in strategy_non_users.items()])
+        st.dataframe(df_nu, use_container_width=True, hide_index=True)
 
 # ----------------------------------------------------------------------
 # Page 3: Supervised Learning (Simulation) - จัดเต็มความโปร!
@@ -302,3 +295,4 @@ elif page == "4. ข้อมูลเชิงลึก (Business Insight)":
             
     except Exception as e:
         st.error(f"เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล: {e}")
+)
