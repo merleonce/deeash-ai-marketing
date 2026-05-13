@@ -3,30 +3,35 @@ import pandas as pd
 import joblib
 import sqlite3
 from datetime import datetime
-import re
 
 # ======================================================================
-# 1. การตั้งค่าหน้าเว็บ (Professional Dashboard UI)
+# 1. การตั้งค่าหน้าเว็บ
 # ======================================================================
 st.set_page_config(page_title="DeeAsh AI Marketing System", layout="wide")
+
 st.markdown("""
     <style>
-    .main-header { font-size: 2.2rem !important; color: #0F172A; font-weight: bold; }
+    .main-header { font-size: 2.2rem !important; color: #0F172A; font-weight: bold; padding-bottom: 10px;}
     .sub-header { font-size: 1.3rem !important; color: #334155; font-weight: bold; border-bottom: 2px solid #E2E8F0; padding-bottom: 5px; margin-top: 20px;}
-    .info-box { background-color: #F8FAFC; padding: 15px; border-left: 4px solid #3B82F6; border-radius: 4px; margin-bottom: 15px; }
+    .info-box { background-color: #F8FAFC; padding: 15px; border-left: 4px solid #3B82F6; border-radius: 4px; margin-bottom: 15px; color: #1E293B;}
+    .stDataFrame { border: 1px solid #E2E8F0; border-radius: 8px; }
     </style>
     """, unsafe_allow_html=True)
 
 # ======================================================================
-# 2. ระบบฐานข้อมูล (SQLite - Backend)
+# 2. ระบบ Database (SQLite) 
 # ======================================================================
 def init_db():
     conn = sqlite3.connect('campaign_history.db')
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS campaign_logs
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT, customer_type TEXT, predicted_persona TEXT, promo_offered TEXT)''')
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                  timestamp TEXT, 
+                  customer_type TEXT, 
+                  predicted_persona TEXT, 
+                  promo_offered TEXT)''')
     conn.commit()
-    conn.close()
+    return conn
 
 init_db()
 
@@ -40,7 +45,7 @@ def save_to_db(customer_type, persona, promo):
     conn.close()
 
 # ======================================================================
-# 3. โหลดโมเดล AI (Pre-trained Models)
+# 3. โหลดโมเดล AI 
 # ======================================================================
 @st.cache_resource
 def load_models():
@@ -50,11 +55,11 @@ try:
     model_users, model_non_users = load_models()
     models_loaded = True
 except Exception as e:
-    st.error(f"⚠️ ไม่พบไฟล์โมเดล AI กรุณาตรวจสอบการอัปโหลดไฟล์ (.pkl) ใน GitHub")
+    st.error(f"ไม่พบไฟล์โมเดล AI กรุณาตรวจสอบการอัปโหลดไฟล์ model_users.pkl และ model_non_users.pkl")
     models_loaded = False
 
 # ======================================================================
-# 4. ฐานข้อมูลกลยุทธ์ (Hybrid Recommendation Logic)
+# 4. ฐานข้อมูลกลยุทธ์ 
 # ======================================================================
 strategy_users = {
     0: {"title": "Traditional Socialite (สายสังคมหน้าร้าน)", "msg": "เตรียมตัวให้พร้อมสำหรับทุกงานสำคัญ! ปิดผมขาวได้แนบเนียน รวดเร็วทันใจ"},
@@ -65,108 +70,174 @@ strategy_users = {
 }
 
 strategy_non_users = {
-    0: {"title": "Traditional Method Loyalist (สายยึดติดร้าน/ครีมย้อม)", "msg": "ผลลัพธ์ระดับซาลอนที่คุณทำเองได้! สีติดชัด กลิ่นไม่ฉุน ตัวช่วยกู้ชีพคิวช่างเต็ม", "promo": "Online Starter Kit: สั่งเซ็ตซาลอนผ่าน TikTok วันนี้ รับฟรี! อุปกรณ์คลุมไหล่"},
-    1: {"title": "Natural Acceptor (สายหงอกน้อย/ปล่อยธรรมชาติ)", "msg": "เลิกถอนให้รากผมอักเสบ! จัดการผมขาวเฉพาะจุด คืนความอ่อนโยนไม่ทำร้ายผมเดิม", "promo": "Shopee Choice: เริ่มเพียง 59.- กดใส่ตะกร้าไว้เผื่อวันไหนอยากดูเด็กลง!"},
+    0: {"title": "Traditional Method Loyalist (สายยึดติดร้าน/ครีมย้อม)", "msg": "ผลลัพธ์ระดับซาลอนที่คุณทำเองได้! สีติดชัด กลิ่นไม่ฉุน ตัวช่วยกู้ชีพคิวช่างเต็ม", "promo": "Online Starter Kit: สั่งเซ็ตซาลอนแอทโฮมผ่าน TikTok วันนี้ รับฟรี! อุปกรณ์คลุมไหล่"},
+    1: {"title": "Natural Acceptor (สายหงอกน้อย/ปล่อยธรรมชาติ)", "msg": "เลิกถอนให้รากผมอักเสบ! จัดการผมขาวเฉพาะจุด คืนความอ่อนเยาว์ไม่ทำร้ายผมเดิม", "promo": "Shopee Choice: สินค้าไซส์มินิ เริ่มเพียง 59.- กดใส่ตะกร้าไว้เผื่อวันไหนอยากดูเด็กลง!"},
     2: {"title": "Health-Conscious Skeptic (สายกลัวสารเคมี/แพ้)", "msg": "สบายใจทุกครั้งที่สระ! ปราศจากแอมโมเนีย อ่อนโยน ไม่แสบ ไม่คัน", "promo": "LazMall Risk-Free: ซื้อผ่าน Lazada หากแพ้ ยินดีคืนเงิน 100% ทันที!"},
     3: {"title": "Performance Doubter (สายกังวลคุณภาพ กลัวสีตก)", "msg": "ทลายทุกความเชื่อเดิมๆ! แชมพูล็อกสีติดทนนาน สระกี่ครั้งสีก็ไม่ตก", "promo": "Review & Earn: ซื้อบน Shopee รีวิวว่าสีไม่หลุด รับ Coins คืน 50%"},
-    4: {"title": "Indifferent Potential (สายเฉยชา รอจุดเปลี่ยน)", "msg": "เปลี่ยนเรื่องย้อมผมที่ยุ่งยากให้เป็นเรื่องง่าย! แค่ฉีก เท สระ ไม่เลอะมือ", "promo": "TikTok Viral Offer: แลกซื้อไซส์ทดลอง 19 บาท ส่งฟรี!"}
+    4: {"title": "Indifferent Potential (สายเฉยชา รอจุดเปลี่ยน)", "msg": "เปลี่ยนเรื่องย้อมผมที่ยุ่งยากให้เป็นเรื่องง่าย! แค่ฉีก เท สระ ไม่เลอะมือ", "promo": "TikTok Viral Offer: แลกซื้อไซส์ทดลอง 19 บาท ส่งฟรี! (เฉพาะลูกค้าใหม่)"}
 }
 
 # ======================================================================
-# 5. ฟังก์ชันการแนะนำแบบ Hybrid (Personalization Engine)
+# 5. ออกแบบโครงสร้างเว็บ (Sidebar Navigation)
 # ======================================================================
-def hybrid_recommendation(row, target_type):
-    c_id = row['cluster_id']
-    base = strategy_users.get(c_id) if target_type == "Users" else strategy_non_users.get(c_id)
-    
-    # Logic ผสมข้อความเสริม
-    final_msg = base['msg']
-    if target_type == "Users":
-        if row.get('feat_herb', 0) == 1: final_msg += " (พ่วงบำรุงล้ำลึกด้วยสมุนไพรธรรมชาติ)"
-        if row.get('feat_confidence', 0) == 1: final_msg += " (การันตีความเนียนสนิท เพิ่มความมั่นใจ)"
-    else:
-        if row.get('feat_chemical_fear', 0) == 1: final_msg += " [สูตรออร์แกนิค ไร้สารแอมโมเนีย]"
-        if row.get('feat_doubt_efficacy', 0) == 1: final_msg += " [สีติดทนนาน ล้างออกง่ายไม่ติดเสื้อผ้า]"
-    
-    promo = base.get('promo', "ข้อเสนอพิเศษรอคุณอยู่")
-    return base['title'], final_msg, promo
+st.sidebar.markdown("<h2 style='text-align: center; color: #0F172A;'>DeeAsh Marketing</h2>", unsafe_allow_html=True)
+st.sidebar.markdown("---")
 
-# ======================================================================
-# 6. ส่วนประกอบหน้าเว็บ (Sidebar & Pages)
-# ======================================================================
-st.sidebar.title("DeeAsh AI Marketing")
-page = st.sidebar.radio("Navigation", ["1. ภาพรวมระบบ (Home)", "2. วิเคราะห์กลุ่มลูกค้า (Unsupervised)", "3. จำลองแคมเปญ (Supervised)", "4. ข้อมูลเชิงลึก (Business Insight)"])
+page = st.sidebar.radio("เมนูนำทาง (Navigation Menu)", 
+                        ["1. ภาพรวมระบบ (Home)", 
+                         "2. วิเคราะห์กลุ่มลูกค้า (Unsupervised Learning)", 
+                         "3. จำลองแคมเปญ (Supervised Learning)", 
+                         "4. ข้อมูลเชิงลึก (Business Insight)"])
+st.sidebar.markdown("---")
 
+# ----------------------------------------------------------------------
+# Page 1: Home
+# ----------------------------------------------------------------------
 if page == "1. ภาพรวมระบบ (Home)":
     st.markdown('<p class="main-header">AI-Driven Marketing Campaign System</p>', unsafe_allow_html=True)
-    st.markdown('<div class="info-box">ระบบวิเคราะห์การตลาดและกำหนดกลุ่มเป้าหมาย (Customer Targeting) แบบครบวงจร (End-to-End Pipeline) สำหรับแบรนด์ DeeAsh เพื่อขับเคลื่อนยอดขายสู่ E-commerce</div>', unsafe_allow_html=True)
-    c1, c2, c3 = st.columns(3)
-    c1.metric("ข้อมูล (Raw Data)", "113 รายการ", "Cleaned 100%")
-    c2.metric("โมเดล AI", "2 ชุด", "Clustering & Classification")
-    c3.metric("สถานะระบบ", "Active", "Ready")
-    st.markdown("---")
-    st.write("ระบบนี้ใช้เทคนิค Machine Learning ทั้ง Unsupervised Learning เพื่อหา Persona และ Supervised Learning เพื่อทำนายพฤติกรรมลูกค้าแบบ Real-time พร้อมผสานกลยุทธ์ O2O เพื่อเปลี่ยนลูกค้าหน้าร้านสู่ช่องทางออนไลน์")
-
-elif page == "2. วิเคราะห์กลุ่มลูกค้า (Unsupervised)":
-    st.markdown('<p class="main-header">วิเคราะห์กลุ่มลูกค้า (Unsupervised Learning)</p>', unsafe_allow_html=True)
-    st.markdown('<p class="sub-header">สรุปผลการแบ่งกลุ่ม (Cluster Analysis)</p>', unsafe_allow_html=True)
-    st.write("เราใช้เทคนิค **K-Means Clustering** ร่วมกับ **Silhouette Score** เพื่อหาจำนวนกลุ่มลูกค้าที่เหมาะสมที่สุด (Optimal K=5)")
-    st.dataframe(pd.DataFrame([{"ID": k, "Persona": v["title"], "Need/Barrier": v["msg"]} for k,v in {**strategy_users, **strategy_non_users}.items()]), use_container_width=True)
-
-elif page == "3. จำลองแคมเปญ (Supervised)":
-    st.markdown('<p class="main-header">จำลองแคมเปญ (Supervised Learning)</p>', unsafe_allow_html=True)
-    st.write("โมเดล **Random Forest Classifier** จะทำนาย Persona ของลูกค้าและดึงกลยุทธ์การตลาดมาแสดงผลให้ทันที")
+    st.markdown('<div class="info-box">ระบบวิเคราะห์การตลาดและกำหนดกลุ่มเป้าหมายแบบครบวงจร สำหรับแบรนด์ DeeAsh เพื่อขับเคลื่อนยอดขายสู่ E-commerce</div>', unsafe_allow_html=True)
     
-    tab1, tab2 = st.tabs(["ลูกค้าปัจจุบัน (Users)", "เป้าหมายใหม่ (Non-Users)"])
+    st.markdown('<p class="sub-header">ตัวชี้วัดระบบโดยรวม</p>', unsafe_allow_html=True)
+    col1, col2, col3 = st.columns(3)
+    col1.metric(label="ข้อมูลฝึกสอน (Raw Data)", value="113 รายการ", delta="Cleaned 100%")
+    col2.metric(label="ตัวแปรพฤติกรรม (Features)", value="11 ตัวแปร", delta="NLP Extracted")
+    col3.metric(label="สถานะระบบ (System Status)", value="Active", delta="Ready for Deployment")
+
+    st.markdown("---")
+    st.write("**วัตถุประสงค์โครงการ:** นำเทคโนโลยี Machine Learning มาใช้วิเคราะห์พฤติกรรมผู้บริโภค เพื่อสร้างแคมเปญการตลาดแบบ Personalized ที่แม่นยำและเพิ่มยอดขายในช่องทางออนไลน์")
+
+# ----------------------------------------------------------------------
+# Page 2: Unsupervised Learning
+# ----------------------------------------------------------------------
+elif page == "2. วิเคราะห์กลุ่มลูกค้า (Unsupervised Learning)":
+    st.markdown('<p class="main-header">วิเคราะห์กลุ่มลูกค้า (Unsupervised Learning)</p>', unsafe_allow_html=True)
+    st.write("ระบบใช้เทคนิค **K-Means Clustering** ร่วมกับ **Silhouette Score** และ **PCA** ในการค้นหาพฤติกรรมแฝงและสร้าง Customer Persona")
+    
+    st.markdown('<p class="sub-header">ตัวชี้วัดประสิทธิภาพของโมเดล</p>', unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
+    col1.metric(label="จำนวนกลุ่มลูกค้าปัจจุบัน (Users)", value="5 Clusters", delta="Silhouette Score Verified")
+    col2.metric(label="จำนวนกลุ่มเป้าหมายใหม่ (Non-Users)", value="5 Clusters", delta="Silhouette Score Verified")
+    
+    st.markdown('<p class="sub-header">โครงสร้างพฤติกรรมลูกค้า (Behavioral Clusters)</p>', unsafe_allow_html=True)
+    tab1, tab2 = st.tabs(["ลูกค้าปัจจุบัน", "เป้าหมายใหม่"])
+    
     with tab1:
-        age_u = st.selectbox("อายุ:", ["ต่ำกว่า 30 ปี", "30–34 ปี", "35–44 ปี", "45–54 ปี", "55 ปีขึ้นไป"])
-        gen_u = st.radio("เพศ:", ["หญิง", "ชาย", "LGBTQ+"])
-        on_u = st.radio("ช่องทางซื้อ:", ["หน้าร้าน", "ออนไลน์"])
-        h, q, s, c = st.columns(4)
-        herb = h.checkbox("เน้นสมุนไพร")
-        quick = q.checkbox("เน้นรวดเร็ว")
-        soc = s.checkbox("ออกงานสังคม")
-        conf = c.checkbox("เน้นมั่นใจ")
-        
-        if st.button("ประมวลผล (Users)"):
-            age_map = {"ต่ำกว่า 30 ปี": 1, "30–34 ปี": 2, "35–44 ปี": 3, "45–54 ปี": 4, "55 ปีขึ้นไป": 5}
-            data = pd.DataFrame([[age_map[age_u], 1 if gen_u=="ชาย" else 0, 1 if on_u=="ออนไลน์" else 0, int(herb), int(quick), int(soc), int(conf)]], columns=['age_score', 'is_male', 'is_online', 'feat_herb', 'feat_quick', 'feat_social', 'feat_confidence'])
-            pred = model_users.predict(data)[0]
-            proba = model_users.predict_proba(data).max()
-            
-            # Hybrid Recommendation
-            title, msg, promo = hybrid_recommendation(pd.Series({'cluster_id': pred, 'feat_herb': int(herb), 'feat_confidence': int(conf)}), "Users")
-            
-            st.success(f"Persona: {title}")
-            st.progress(float(proba))
-            st.info(f"ข้อความ: {msg}")
-            
-            # O2O Logic
-            if on_u == "หน้าร้าน":
-                st.warning("O2O Trigger: ลูกค้าหน้าร้าน! แนะนำโปรโมชันเปลี่ยนใจสู่ Shopee/TikTok ลด 30%")
-            save_to_db("User", title, msg)
-
+        df_u = pd.DataFrame([{"ID": k, "กลุ่มเป้าหมาย (Persona)": v["title"], "ความต้องการหลัก (Core Need)": v["msg"]} for k,v in strategy_users.items()])
+        st.dataframe(df_u, use_container_width=True, hide_index=True)
     with tab2:
-        age_nu = st.selectbox("อายุ:", ["ต่ำกว่า 30 ปี", "30–34 ปี", "35–44 ปี", "45–54 ปี", "55 ปีขึ้นไป"])
-        chem = st.checkbox("กลัวสารเคมี"); salon = st.checkbox("ติดซาลอน"); low = st.checkbox("หงอกน้อย"); doubt = st.checkbox("กังวลคุณภาพ")
-        
-        if st.button("ประมวลผล (Non-Users)"):
-            age_map = {"ต่ำกว่า 30 ปี": 1, "30–34 ปี": 2, "35–44 ปี": 3, "45–54 ปี": 4, "55 ปีขึ้นไป": 5}
-            data = pd.DataFrame([[age_map[age_nu], int(chem), int(salon), int(low), int(doubt)]], columns=['age_score', 'feat_chemical_fear', 'feat_salon_loyalty', 'feat_low_white', 'feat_doubt_efficacy'])
-            pred = model_non_users.predict(data)[0]
-            
-            title, msg, promo = hybrid_recommendation(pd.Series({'cluster_id': pred, 'feat_chemical_fear': int(chem), 'feat_doubt_efficacy': int(doubt)}), "Non-Users")
-            st.success(f"Persona: {title}")
-            st.info(f"ข้อความ: {msg}")
-            st.warning(f"โปรโมชัน: {promo}")
-            save_to_db("Non-User", title, promo)
+        df_nu = pd.DataFrame([{"ID": k, "กลุ่มเป้าหมาย (Persona)": v["title"], "วิธีทลายกำแพง (Barrier to Break)": v["msg"]} for k,v in strategy_non_users.items()])
+        st.dataframe(df_nu, use_container_width=True, hide_index=True)
 
+# ----------------------------------------------------------------------
+# Page 3: Supervised Learning (Simulation)
+# ----------------------------------------------------------------------
+elif page == "3. จำลองแคมเปญ (Supervised Learning)":
+    st.markdown('<p class="main-header">จำลองแคมเปญ (Supervised Learning)</p>', unsafe_allow_html=True)
+    st.write("ระบบใช้ **Random Forest Classifier** เพื่อทำนาย Persona ลูกค้าใหม่แบบ Real-time และบันทึกข้อมูลลงฐานข้อมูล")
+    
+    st.markdown('<p class="sub-header">ความแม่นยำของโมเดลพยากรณ์</p>', unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
+    col1.metric(label="ความแม่นยำ - ลูกค้าปัจจุบัน", value="100.00%", delta="Training Accuracy")
+    col2.metric(label="ความแม่นยำ - เป้าหมายใหม่", value="100.00%", delta="Training Accuracy")
+    st.markdown("---")
+
+    if models_loaded:
+        tab1, tab2 = st.tabs(["จำลองข้อมูล: ลูกค้าปัจจุบัน", "จำลองข้อมูล: เป้าหมายใหม่"])
+
+        with tab1:
+            col1, col2 = st.columns(2)
+            with col1:
+                age_raw = st.selectbox("อายุ:", ["ต่ำกว่า 30 ปี", "30–34 ปี", "35–44 ปี", "45–54 ปี", "55 ปีขึ้นไป"], key="u_age")
+                gender_raw = st.radio("เพศ:", ["หญิง", "ชาย", "LGBTQ+"], key="u_gender")
+                online_raw = st.radio("ช่องทางซื้อประจำ:", ["หน้าร้าน (เช่น 7-11, โชห่วย, ห้าง)", "ออนไลน์ (เช่น Shopee, TikTok)"], key="u_online")
+            with col2:
+                st.write("**พฤติกรรมที่เน้น (เลือกได้หลายข้อ)**")
+                feat_herb = st.checkbox("เน้นสมุนไพร บำรุงล้ำลึก")
+                feat_quick = st.checkbox("เน้นความรวดเร็ว 10 นาทีจบ")
+                feat_social = st.checkbox("ใช้เตรียมตัวออกงานสังคม")
+                feat_conf = st.checkbox("ใช้เพื่อเพิ่มความมั่นใจ")
+
+            if st.button("ประมวลผลและส่งแคมเปญ", key="btn_u", use_container_width=True):
+                age_map = {"ต่ำกว่า 30 ปี": 1, "30–34 ปี": 2, "35–44 ปี": 3, "45–54 ปี": 4, "55 ปีขึ้นไป": 5}
+                is_online_val = 1 if online_raw == "ออนไลน์ (เช่น Shopee, TikTok)" else 0
+                
+                input_df = pd.DataFrame([[age_map[age_raw], 1 if gender_raw == "ชาย" else 0, is_online_val, int(feat_herb), int(feat_quick), int(feat_social), int(feat_conf)]], columns=["age_score", "is_male", "is_online", "feat_herb", "feat_quick", "feat_social", "feat_confidence"])
+                
+                pred_cluster = model_users.predict(input_df)[0]
+                result = strategy_users[pred_cluster]
+                
+                final_msg = result['msg']
+                if feat_herb: final_msg += " (พ่วงบำรุงล้ำลึกด้วยสมุนไพรธรรมชาติ)"
+                if feat_conf: final_msg += " (การันตีความเนียนสนิท เพิ่มความมั่นใจ)"
+                
+                promo_msg = "Online Loyalty: สั่งช่องทางออนไลน์เดิม รับส่วนลด 15% ทันที" if is_online_val == 1 else "O2O Trigger: ปกติซื้อหน้าร้านใช่ไหม? ลองสั่งผ่าน Shopee วันนี้ รับโค้ดส่งฟรีและลดเพิ่ม 30%"
+
+                st.success(f"**การวิเคราะห์ Persona:** {result['title']}")
+                st.info(f"**ข้อความโฆษณาที่แนะนำ:**\n{final_msg}")
+                st.warning(f"**กลยุทธ์โปรโมชัน:**\n{promo_msg}")
+                
+                save_to_db("ลูกค้าปัจจุบัน", result['title'], promo_msg)
+
+        with tab2:
+            col3, col4 = st.columns(2)
+            with col3:
+                age_raw2 = st.selectbox("อายุ:", ["ต่ำกว่า 30 ปี", "30–34 ปี", "35–44 ปี", "45–54 ปี", "55 ปีขึ้นไป"], key="nu_age")
+            with col4:
+                st.write("**กำแพงในใจที่ทำให้ไม่ใช้งาน (Barriers)**")
+                feat_chem = st.checkbox("กลัวสารเคมี แพ้ ผมเสีย")
+                feat_salon = st.checkbox("ยึดติดกับการเข้าร้าน / ใช้ครีมเดิมๆ")
+                feat_low = st.checkbox("ผมขาวมีน้อย ปล่อยธรรมชาติ / ถอนเอา")
+                feat_doubt = st.checkbox("กังวลเรื่องคุณภาพ (สีตก / ไม่ทน)")
+
+            if st.button("ประมวลผลและส่งแคมเปญ ", key="btn_nu", use_container_width=True):
+                age_map = {"ต่ำกว่า 30 ปี": 1, "30–34 ปี": 2, "35–44 ปี": 3, "45–54 ปี": 4, "55 ปีขึ้นไป": 5}
+                input_df2 = pd.DataFrame([[age_map[age_raw2], int(feat_chem), int(feat_salon), int(feat_low), int(feat_doubt)]], columns=["age_score", "feat_chemical_fear", "feat_salon_loyalty", "feat_low_white", "feat_doubt_efficacy"])
+                
+                pred_cluster2 = model_non_users.predict(input_df2)[0]
+                result2 = strategy_non_users[pred_cluster2]
+
+                final_msg2 = result2['msg']
+                if feat_chem: final_msg2 += " [ย้ำ! สูตรออร์แกนิค ไร้สารแอมโมเนีย]"
+                if feat_doubt: final_msg2 += " [ย้ำ! สีติดทนนาน ล้างออกง่ายไม่ติดเสื้อผ้า]"
+
+                st.success(f"**การวิเคราะห์ Persona:** {result2['title']}")
+                st.info(f"**ข้อความทลายกำแพงในใจ:**\n{final_msg2}")
+                st.warning(f"**กลยุทธ์โปรโมชัน:**\n{result2['promo']}")
+                
+                save_to_db("เป้าหมายใหม่ (Non-User)", result2['title'], result2['promo'])
+
+# ----------------------------------------------------------------------
+# Page 4: Business Insight (Database Dashboard)
+# ----------------------------------------------------------------------
 elif page == "4. ข้อมูลเชิงลึก (Business Insight)":
-    st.markdown('<p class="main-header">Business Insight & Campaign Logs</p>', unsafe_allow_html=True)
-    conn = sqlite3.connect('campaign_history.db')
-    df_logs = pd.read_sql_query("SELECT * FROM campaign_logs", conn)
-    conn.close()
-    st.dataframe(df_logs, use_container_width=True)
-    if st.button("ล้างข้อมูลทั้งหมด"):
+    st.markdown('<p class="main-header">ข้อมูลเชิงลึก & ประวัติแคมเปญ (Business Insight)</p>', unsafe_allow_html=True)
+    st.write("Dashboard สรุปผลการยิงแคมเปญและการดึงข้อมูลแบบ Real-time จากฐานข้อมูล **SQLite Database**")
+    
+    try:
         conn = sqlite3.connect('campaign_history.db')
-        conn.execute("DELETE FROM campaign_logs"); conn.commit(); conn.close(); st.rerun()
+        df_logs = pd.read_sql_query("SELECT id AS 'ลำดับ', timestamp AS 'เวลาจำลอง', customer_type AS 'ประเภทลูกค้า', predicted_persona AS 'กลุ่ม Persona', promo_offered AS 'โปรโมชันที่นำเสนอ' FROM campaign_logs ORDER BY id DESC", conn)
+        conn.close()
+        
+        if not df_logs.empty:
+            st.markdown('<div class="info-box">สถานะการเชื่อมต่อฐานข้อมูล: ปกติ (SQLite Connected) - แสดงประวัติการจำลองแคมเปญล่าสุด</div>', unsafe_allow_html=True)
+            st.dataframe(df_logs, use_container_width=True, hide_index=True)
+            
+            st.markdown('<p class="sub-header">สัดส่วนกลุ่มเป้าหมายที่ถูกจำลอง (Campaign Segmentation)</p>', unsafe_allow_html=True)
+            chart_data = df_logs['กลุ่ม Persona'].value_counts()
+            st.bar_chart(chart_data, color="#3B82F6")
+            
+            st.markdown("---")
+            if st.button("ล้างข้อมูลประวัติทั้งหมด (Clear Database)"):
+                conn = sqlite3.connect('campaign_history.db')
+                c = conn.cursor()
+                c.execute("DELETE FROM campaign_logs")
+                c.execute("DELETE FROM sqlite_sequence WHERE name='campaign_logs'")
+                conn.commit()
+                conn.close()
+                st.rerun()
+                
+        else:
+            st.info("ยังไม่มีประวัติการยิงแคมเปญ กรุณาไปที่เมนู '3. จำลองแคมเปญ' เพื่อทดสอบระบบ")
+            
+    except Exception as e:
+        st.error(f"เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล: {e}")
