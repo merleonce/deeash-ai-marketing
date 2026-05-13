@@ -109,15 +109,30 @@ if page == "1. ภาพรวมระบบ (Home)":
 # ----------------------------------------------------------------------
 elif page == "2. วิเคราะห์กลุ่มลูกค้า (Unsupervised Learning)":
     st.markdown('<p class="main-header">วิเคราะห์กลุ่มลูกค้า (Unsupervised Learning)</p>', unsafe_allow_html=True)
-    st.write("ระบบใช้เทคนิค **K-Means Clustering** ร่วมกับ **Silhouette Score** และ **PCA** ในการค้นหาพฤติกรรมแฝงและสร้าง Customer Persona")
+    st.write("การประมวลผลข้อมูลด้วย K-Means เพื่อค้นหาพฤติกรรมแฝง (Latent Behavior) และกำหนดกลยุทธ์เชิงรุก")
     
     st.markdown('<p class="sub-header">ตัวชี้วัดประสิทธิภาพของโมเดล</p>', unsafe_allow_html=True)
-    col1, col2 = st.columns(2)
-    col1.metric(label="จำนวนกลุ่มลูกค้าปัจจุบัน (Users)", value="5 Clusters", delta="Silhouette Score Verified")
-    col2.metric(label="จำนวนกลุ่มเป้าหมายใหม่ (Non-Users)", value="5 Clusters", delta="Silhouette Score Verified")
+    c1, c2 = st.columns(2)
+    c1.metric(label="จำนวนกลุ่มลูกค้าปัจจุบัน (Users)", value="5 Clusters", delta="Silhouette Score Verified")
+    c2.metric(label="จำนวนกลุ่มเป้าหมายใหม่ (Non-Users)", value="5 Clusters", delta="Silhouette Score Verified")
     
+    # --- ส่วนที่เพิ่มเข้ามา: สรุปหัวใจสำคัญ (Executive Summary) ---
+    st.markdown('<p class="sub-header">สรุปผลลัพธ์ทางธุรกิจจาก AI (Business Insights)</p>', unsafe_allow_html=True)
+    
+    col_a, col_b = st.columns(2)
+    with col_a:
+        st.info("**สิ่งที่โมเดล Unsupervised มอบให้:**\n\n"
+                "1. **Break the Mass Marketing:** เราพบว่าลูกค้าไม่ได้มีแค่กลุ่มเดียว แต่มีถึง 5 กลุ่มย่อยที่มีความต้องการต่างกัน เช่น สายสังคมที่เน้นออกงาน กับสายปฏิบัติที่เน้นแค่ความไว\n"
+                "2. **Data-Driven Personas:** ทุก Persona ไม่ได้มาจากการคาดเดา แต่มาจาก 'ค่าพิกัดกลาง' (Centroid) ที่ยืนยันได้ด้วยสถิติ\n"
+                "3. **Targeted Communication:** ระบบช่วยให้แบรนด์เลิกใช้ข้อความหว่านแห และยิงโฆษณาที่แก้ Pain Point เฉพาะกลุ่มได้แม่นยำขึ้น")
+    
+    with col_b:
+        st.warning("**โอกาสทางธุรกิจ (Opportunity Map):**\n\n"
+                   "1. **Blue Ocean Detection:** AI ระบุกลุ่มผู้ชายที่ไม่เคยถูกทำการตลาด (Cluster 2) เป็นช่องทางใหม่ในการขยายตลาด\n"
+                   "2. **Barrier Removal:** ในกลุ่ม Non-Users AI ค้นพบกลุ่มที่กังวลเรื่องสีตก (Performance Doubter) ซึ่งเป็นโอกาสในการสื่อสารเรื่อง 'ความติดทน' เพื่อดึงคนเหล่านี้มาใช้ออนไลน์")
+
     st.markdown('<p class="sub-header">โครงสร้างพฤติกรรมลูกค้า (Behavioral Clusters)</p>', unsafe_allow_html=True)
-    tab1, tab2 = st.tabs(["ลูกค้าปัจจุบัน", "เป้าหมายใหม่"])
+    tab1, tab2 = st.tabs(["ลูกค้าปัจจุบัน (Users)", "กลุ่มเป้าหมายใหม่ (Non-Users)"])
     
     with tab1:
         st.write("ตารางแสดง Persona ของกลุ่มคนที่เคยใช้แชมพูปิดผมขาว DeeAsh")
