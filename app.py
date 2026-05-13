@@ -295,4 +295,3 @@ elif page == "4. ข้อมูลเชิงลึก (Business Insight)":
             
     except Exception as e:
         st.error(f"เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล: {e}")
-)
