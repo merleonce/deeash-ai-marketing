@@ -32,7 +32,6 @@ def init_db():
                   promo_offered TEXT)''')
     conn.commit()
     return conn
-
 init_db()
 
 def save_to_db(customer_type, persona, promo):
@@ -82,7 +81,6 @@ strategy_non_users = {
 # ======================================================================
 st.sidebar.markdown("<h2 style='text-align: center; color: #0F172A;'>DeeAsh Marketing</h2>", unsafe_allow_html=True)
 st.sidebar.markdown("---")
-
 page = st.sidebar.radio("เมนูนำทาง (Navigation Menu)", 
                         ["1. ภาพรวมระบบ (Home)", 
                          "2. วิเคราะห์กลุ่มลูกค้า (Unsupervised Learning)", 
@@ -122,14 +120,16 @@ elif page == "2. วิเคราะห์กลุ่มลูกค้า (U
     tab1, tab2 = st.tabs(["ลูกค้าปัจจุบัน", "เป้าหมายใหม่"])
     
     with tab1:
+        st.write("ตารางแสดง Persona ของกลุ่มคนที่เคยใช้แชมพูปิดผมขาว DeeAsh")
         df_u = pd.DataFrame([{"ID": k, "กลุ่มเป้าหมาย (Persona)": v["title"], "ความต้องการหลัก (Core Need)": v["msg"]} for k,v in strategy_users.items()])
         st.dataframe(df_u, use_container_width=True, hide_index=True)
     with tab2:
+        st.write("ตารางแสดง Persona ของกลุ่มคนที่ไม่เคยใช้แชมพูปิดผมขาว (ตลาดใหม่)")
         df_nu = pd.DataFrame([{"ID": k, "กลุ่มเป้าหมาย (Persona)": v["title"], "วิธีทลายกำแพง (Barrier to Break)": v["msg"]} for k,v in strategy_non_users.items()])
         st.dataframe(df_nu, use_container_width=True, hide_index=True)
 
 # ----------------------------------------------------------------------
-# Page 3: Supervised Learning (Simulation)
+# Page 3: Supervised Learning (Simulation) - จัดเต็มความโปร!
 # ----------------------------------------------------------------------
 elif page == "3. จำลองแคมเปญ (Supervised Learning)":
     st.markdown('<p class="main-header">จำลองแคมเปญ (Supervised Learning)</p>', unsafe_allow_html=True)
@@ -145,6 +145,7 @@ elif page == "3. จำลองแคมเปญ (Supervised Learning)":
         tab1, tab2 = st.tabs(["จำลองข้อมูล: ลูกค้าปัจจุบัน", "จำลองข้อมูล: เป้าหมายใหม่"])
 
         with tab1:
+            st.write("กรอกข้อมูลเพื่อจำลองการยิงแคมเปญแบบ Personalized")
             col1, col2 = st.columns(2)
             with col1:
                 age_raw = st.selectbox("อายุ:", ["ต่ำกว่า 30 ปี", "30–34 ปี", "35–44 ปี", "45–54 ปี", "55 ปีขึ้นไป"], key="u_age")
@@ -163,22 +164,43 @@ elif page == "3. จำลองแคมเปญ (Supervised Learning)":
                 
                 input_df = pd.DataFrame([[age_map[age_raw], 1 if gender_raw == "ชาย" else 0, is_online_val, int(feat_herb), int(feat_quick), int(feat_social), int(feat_conf)]], columns=["age_score", "is_male", "is_online", "feat_herb", "feat_quick", "feat_social", "feat_confidence"])
                 
+                # --- ส่วนอัปเกรด (AI Confidence & Insights) ---
                 pred_cluster = model_users.predict(input_df)[0]
+                pred_proba = model_users.predict_proba(input_df).max() # หาความมั่นใจของ AI
                 result = strategy_users[pred_cluster]
                 
+                st.markdown("---")
+                st.subheader("🎯 ผลการวิเคราะห์จาก AI")
+                
+                # แถบ Progress Bar ความมั่นใจ
+                st.write(f"**ระดับความมั่นใจของ AI (Confidence Score):** {pred_proba:.1%}")
+                st.progress(float(pred_proba))
+                
+                st.success(f"**🤖 Persona ที่ตรวจพบ:** {result['title']}")
+                
+                # กล่องซ่อน Insights
+                with st.expander("🔍 ดูปัจจัยเชิงลึกที่ AI ตรวจพบ (DNA Insights)"):
+                    c_dna1, c_dna2, c_dna3, c_dna4 = st.columns(4)
+                    c_dna1.metric("สมุนไพร", "สูง" if feat_herb else "ต่ำ")
+                    c_dna2.metric("ความรวดเร็ว", "สูง" if feat_quick else "ต่ำ")
+                    c_dna3.metric("งานสังคม", "สูง" if feat_social else "ต่ำ")
+                    c_dna4.metric("ความมั่นใจ", "สูง" if feat_conf else "ต่ำ")
+
+                # Hybrid Logic
                 final_msg = result['msg']
                 if feat_herb: final_msg += " (พ่วงบำรุงล้ำลึกด้วยสมุนไพรธรรมชาติ)"
                 if feat_conf: final_msg += " (การันตีความเนียนสนิท เพิ่มความมั่นใจ)"
                 
                 promo_msg = "Online Loyalty: สั่งช่องทางออนไลน์เดิม รับส่วนลด 15% ทันที" if is_online_val == 1 else "O2O Trigger: ปกติซื้อหน้าร้านใช่ไหม? ลองสั่งผ่าน Shopee วันนี้ รับโค้ดส่งฟรีและลดเพิ่ม 30%"
 
-                st.success(f"**การวิเคราะห์ Persona:** {result['title']}")
-                st.info(f"**ข้อความโฆษณาที่แนะนำ:**\n{final_msg}")
-                st.warning(f"**กลยุทธ์โปรโมชัน:**\n{promo_msg}")
+                st.info(f"💬 **ข้อความโฆษณาที่แนะนำ:**\n{final_msg}")
+                st.warning(f"🎁 **กลยุทธ์โปรโมชัน:**\n{promo_msg}")
                 
                 save_to_db("ลูกค้าปัจจุบัน", result['title'], promo_msg)
+                st.toast('บันทึกแคมเปญลงฐานข้อมูล (SQL) สำเร็จ!')
 
         with tab2:
+            st.write("กรอกข้อมูลเพื่อจำลองการยิงแคมเปญทลายกำแพงในใจ")
             col3, col4 = st.columns(2)
             with col3:
                 age_raw2 = st.selectbox("อายุ:", ["ต่ำกว่า 30 ปี", "30–34 ปี", "35–44 ปี", "45–54 ปี", "55 ปีขึ้นไป"], key="nu_age")
@@ -193,18 +215,27 @@ elif page == "3. จำลองแคมเปญ (Supervised Learning)":
                 age_map = {"ต่ำกว่า 30 ปี": 1, "30–34 ปี": 2, "35–44 ปี": 3, "45–54 ปี": 4, "55 ปีขึ้นไป": 5}
                 input_df2 = pd.DataFrame([[age_map[age_raw2], int(feat_chem), int(feat_salon), int(feat_low), int(feat_doubt)]], columns=["age_score", "feat_chemical_fear", "feat_salon_loyalty", "feat_low_white", "feat_doubt_efficacy"])
                 
+                # --- ส่วนอัปเกรด (AI Confidence) ---
                 pred_cluster2 = model_non_users.predict(input_df2)[0]
+                pred_proba2 = model_non_users.predict_proba(input_df2).max()
                 result2 = strategy_non_users[pred_cluster2]
+
+                st.markdown("---")
+                st.subheader("🎯 ผลการวิเคราะห์จาก AI")
+                st.write(f"**ระดับความมั่นใจของ AI (Confidence Score):** {pred_proba2:.1%}")
+                st.progress(float(pred_proba2))
+                
+                st.success(f"**🤖 Persona ที่ตรวจพบ:** {result2['title']}")
 
                 final_msg2 = result2['msg']
                 if feat_chem: final_msg2 += " [ย้ำ! สูตรออร์แกนิค ไร้สารแอมโมเนีย]"
                 if feat_doubt: final_msg2 += " [ย้ำ! สีติดทนนาน ล้างออกง่ายไม่ติดเสื้อผ้า]"
 
-                st.success(f"**การวิเคราะห์ Persona:** {result2['title']}")
-                st.info(f"**ข้อความทลายกำแพงในใจ:**\n{final_msg2}")
-                st.warning(f"**กลยุทธ์โปรโมชัน:**\n{result2['promo']}")
+                st.info(f"💬 **ข้อความทลายกำแพงในใจ:**\n{final_msg2}")
+                st.warning(f"🎁 **กลยุทธ์โปรโมชัน:**\n{result2['promo']}")
                 
                 save_to_db("เป้าหมายใหม่ (Non-User)", result2['title'], result2['promo'])
+                st.toast('บันทึกแคมเปญลงฐานข้อมูล (SQL) สำเร็จ!')
 
 # ----------------------------------------------------------------------
 # Page 4: Business Insight (Database Dashboard)
@@ -220,6 +251,14 @@ elif page == "4. ข้อมูลเชิงลึก (Business Insight)":
         
         if not df_logs.empty:
             st.markdown('<div class="info-box">สถานะการเชื่อมต่อฐานข้อมูล: ปกติ (SQLite Connected) - แสดงประวัติการจำลองแคมเปญล่าสุด</div>', unsafe_allow_html=True)
+            
+            # --- ส่วนอัปเกรด (เพิ่ม Metric สรุปยอด) ---
+            st.write("📈 **สรุปสถิติแคมเปญวันนี้**")
+            m1, m2 = st.columns(2)
+            m1.metric("จำนวนแคมเปญที่จำลองทั้งหมด", f"{len(df_logs)} แคมเปญ")
+            m2.metric("Persona ยอดนิยมที่ถูกวิเคราะห์", df_logs['กลุ่ม Persona'].mode()[0])
+            st.markdown("---")
+            
             st.dataframe(df_logs, use_container_width=True, hide_index=True)
             
             st.markdown('<p class="sub-header">สัดส่วนกลุ่มเป้าหมายที่ถูกจำลอง (Campaign Segmentation)</p>', unsafe_allow_html=True)
@@ -227,7 +266,7 @@ elif page == "4. ข้อมูลเชิงลึก (Business Insight)":
             st.bar_chart(chart_data, color="#3B82F6")
             
             st.markdown("---")
-            if st.button("ล้างข้อมูลประวัติทั้งหมด (Clear Database)"):
+            if st.button("ล้างข้อมูลประวัติทั้งหมด (Clear Database)", type="primary"):
                 conn = sqlite3.connect('campaign_history.db')
                 c = conn.cursor()
                 c.execute("DELETE FROM campaign_logs")
